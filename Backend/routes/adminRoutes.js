@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const Shop = require("../models/SpSchema");
 const nodemailer = require("nodemailer");
+const { default: mongoose } = require("mongoose");
 
 // Admin dashboard route
 
@@ -34,16 +35,51 @@ router.delete("/:id", async (req, res) => {
 // Get all service providers
 router.get("/get/all/service-providers", async (req, res) => {
   try {
-    const AllShops = await Shop.find(
-      {},
-      "name email phone gender dob shopName location designation spAddress createdAt spRating"
-    );
-
-    res.status(200).json(AllShops);
+    const shops = await Shop.find(
+      { approvals: true },
+      "name email phone gender dob shopName location designation spAddress createdAt spRating priority"
+    ).lean();
+    console.log("Fetched shops:", shops.map((shop) => shop._id.toString()));
+    res.status(200).json(shops);
   } catch (error) {
+    console.error("Error fetching service providers:", error);
     res.status(500).json({ message: "Error fetching service providers" });
   }
 });
+
+// Update priority of a service provider
+
+router.put("/update-priority/:id", async (req, res) => {
+  console.log("Update priority request:", {
+    id: req.params.id,
+    priority: req.body.priority,
+  });
+  try {
+    const { priority } = req.body;
+    if (priority === undefined || isNaN(priority) || priority < 0) {
+      return res.status(400).json({ message: "Invalid priority value" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+    const shop = await Shop.findByIdAndUpdate(
+      req.params.id,
+      { priority: parseInt(priority) },
+      { new: true }
+    );
+    if (!shop) {
+      console.log(`Shop not found for ID: ${req.params.id}`);
+      return res.status(404).json({ message: "Shop not found" });
+    }
+    console.log("Shop updated:", shop);
+    res.status(200).json({ message: "Priority updated successfully", shop });
+  } catch (error) {
+    console.error("Error updating priority:", error);
+    res.status(500).json({ message: "Server error while updating priority" });
+  }
+});
+
+
 
 // Delete a service provider by ID
 router.delete("/delete/:id", async (req, res) => {
