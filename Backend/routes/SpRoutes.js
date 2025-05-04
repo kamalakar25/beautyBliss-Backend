@@ -355,7 +355,7 @@ router.get("/all/admins/data", async (req, res) => {
 // GET /parlor/:email
 router.get("/parlor/:email", async (req, res) => {
   try {
-    const email = decodeURIComponent(req.params.email);
+    const email = req.params.email;
     const parlor = await Shop.findOne({ email }).lean();
     if (!parlor) {
       return res.status(404).json({ message: "Parlor not found" });
