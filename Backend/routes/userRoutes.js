@@ -271,30 +271,33 @@ router.get("/role/:email", async (req, res) => {
 });
 
 // Get all services
+// Get all services
 router.get("/cards/services", async (req, res) => {
   try {
-    const shops = await Shop.find(
-      {},
-      "services countPeople shopName location designation email spRating"
-    );
-    const filteredServices = shops.flatMap((shop) =>
+    const shops = await Shop.find({ approvals: true })
+      .select(
+        "shopName shopImage location services designation spRating countPeople priority"
+      )
+      .lean();
+    const services = shops.flatMap((shop) =>
       shop.services.map((service) => ({
         shopName: shop.shopName,
-        style: service.style,
+        shopImage: shop.shopImage,
+        location: shop.location,
         serviceName: service.serviceName,
+        style: service.style,
         price: service.price,
-        rating: service.rating,
-        shopImage: service.shopImage,
         email: shop.email,
         designation: shop.designation,
-        location: shop.location,
-        spRating: shop.spRating,
-        countPeople: shop.countPeople,
+        countPeople: shop.countPeople || 0,
+        spRating: shop.spRating || 0,
+        priority: shop.priority || 0,
       }))
     );
-    res.status(200).json(filteredServices);
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    res.status(500).json({ message: "Error fetching services" });
   }
 });
 
