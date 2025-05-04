@@ -39,7 +39,7 @@ router.get("/get/all/service-providers", async (req, res) => {
       { approvals: true },
       "name email phone gender dob shopName location designation spAddress createdAt spRating priority"
     ).lean();
-    console.log("Fetched shops:", shops.map((shop) => shop._id.toString()));
+    // console.log("Fetched shops:", shops.map((shop) => shop._id.toString()));
     res.status(200).json(shops);
   } catch (error) {
     console.error("Error fetching service providers:", error);
