@@ -39,6 +39,7 @@ const addServiceSchema = new mongoose.Schema({
 
 
 
+
 const salonShopSchema = new mongoose.Schema({
     approvals: {
         type: Boolean,
@@ -53,7 +54,6 @@ const salonShopSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-       
     },
     password: {
         type: String,
@@ -97,7 +97,7 @@ const salonShopSchema = new mongoose.Schema({
     },
     otp: { type: Number },
     otpTimestamp: { type: Date },
-   manPower: [manPowerSchema],
+    manPower: [manPowerSchema],
     services: [addServiceSchema],
     availableTime: {
         fromTime: {
@@ -108,7 +108,8 @@ const salonShopSchema = new mongoose.Schema({
             type: String,
             required: true
         }
-    }
+    },
+    priority: { type: Number, default: 0 },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
