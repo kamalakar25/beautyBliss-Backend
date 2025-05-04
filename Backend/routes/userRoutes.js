@@ -276,7 +276,7 @@ router.get("/cards/services", async (req, res) => {
   try {
     const shops = await Shop.find({ approvals: true })
       .select(
-        "shopName shopImage location services designation spRating countPeople priority"
+        "shopName shopImage location services designation spRating countPeople priority email"
       )
       .lean();
     const services = shops.flatMap((shop) =>
