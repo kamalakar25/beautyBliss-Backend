@@ -3,6 +3,11 @@ const router = express.Router();
 const Shop = require("../models/SpSchema");
 const multer = require("multer");
 const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
+
+// Serve static files from the 'uploads' folder (case-sensitive)
+router.use("/uploads", cors(), express.static(path.join(__dirname, "../uploads")));
 
 // POST /api/salons - Create a new salon shop
 router.post("/register-admin", async (req, res) => {
@@ -174,14 +179,14 @@ router.get("/get-services/:email", async (req, res) => {
 
 // Setup multer
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: "Uploads/", // Ensure folder exists in production
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 const upload = multer({ storage });
 
-// POST route
+// POST route to add a service
 router.post(
   "/add-service/:email",
   upload.single("shopImage"),
@@ -200,11 +205,14 @@ router.post(
         return res.status(404).json({ message: "Shop not found" });
       }
 
+      // Normalize path to use forward slashes
+      const shopImagePath = req.file.path.replace(/\\/g, "/");
+
       shop.services.push({
         serviceName,
         style,
         price,
-        shopImage: req.file.path,
+        shopImage: shopImagePath,
       });
 
       await shop.save();
@@ -223,7 +231,6 @@ router.post(
 );
 
 // PUT route to update service by ID
-
 router.put(
   "/update-service/:serviceId",
   upload.single("shopImage"),
@@ -249,10 +256,12 @@ router.put(
       if (price) service.price = price;
 
       if (req.file) {
+        // Delete old image if it exists
         if (service.shopImage && fs.existsSync(service.shopImage)) {
-          fs.unlinkSync(service.shopImage); // Delete old image
+          fs.unlinkSync(service.shopImage);
         }
-        service.shopImage = req.file.path; // Use full path (e.g., uploads/filename.jpg)
+        // Normalize new path to use forward slashes
+        service.shopImage = req.file.path.replace(/\\/g, "/");
       }
 
       await AdminSalon.save();
@@ -299,7 +308,8 @@ router.delete("/deleteService/:id", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-// get all services cards
+
+// Get all services cards
 router.get("/cards/services", async (req, res) => {
   try {
     const shops = await Shop.find({}, "services shopName location"); // fetch needed fields
